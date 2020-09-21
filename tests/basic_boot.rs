@@ -10,7 +10,7 @@ use first_os::println;
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     test_main();
-    loop {}
+    first_os::hlt_loop();
 }
 
 #[panic_handler]

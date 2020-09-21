@@ -17,18 +17,14 @@ pub extern "C" fn _start() -> ! {
     #[cfg(test)]
     test_main();
 
-    loop {
-        use first_os::print;
-        for _ in 0..100000 {}
-        print!("-");        // new
-    }
+    first_os::hlt_loop();
 }
 
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     println!("{}", _info);
-    loop {}
+    first_os::hlt_loop();
 }
 
 #[cfg(test)]

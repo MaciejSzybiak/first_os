@@ -14,8 +14,6 @@ pub extern "C" fn _start() -> ! {
 
     first_os::init();
 
-    x86_64::instructions::interrupts::int3(); //throw exception
-
     #[cfg(test)]
     test_main();
 

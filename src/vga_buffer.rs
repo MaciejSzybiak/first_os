@@ -151,3 +151,27 @@ pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
     WRITER.lock().write_fmt(args).unwrap();
 }
+
+#[test_case]
+fn test_println_simple() {
+    //meant to finish without panicking
+    println!("test_println_simple output");
+}
+
+#[test_case]
+fn test_println_many() {
+    //meant to finish without panicking
+    for _ in 0..100 {
+        println!("test_println_many output");
+    }
+}
+
+#[test_case]
+fn test_println_output() {
+    let s = "Some test string that fits on a single line";
+    println!("{}", s);
+    for (i, c) in s.chars().enumerate() {
+        let screen_char = WRITER.lock().buffer.chars[VGA_BUFFER_HEIGHT - 2][i].read();
+        assert_eq!(char::from(screen_char.ascii_char), c);
+    }
+}

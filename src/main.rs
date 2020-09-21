@@ -12,6 +12,10 @@ pub extern "C" fn _start() -> ! {
     // entry point
     println!("Hello world!");
 
+    first_os::init();
+
+    x86_64::instructions::interrupts::int3(); //throw exception
+
     #[cfg(test)]
     test_main();
 

@@ -17,7 +17,11 @@ pub extern "C" fn _start() -> ! {
     #[cfg(test)]
     test_main();
 
-    loop {}
+    loop {
+        use first_os::print;
+        for _ in 0..100000 {}
+        print!("-");        // new
+    }
 }
 
 #[cfg(not(test))]

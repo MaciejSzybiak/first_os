@@ -6,9 +6,11 @@
 
 use core::panic::PanicInfo;
 use first_os::println;
+use bootloader::{BootInfo, entry_point};
 
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+entry_point!(kernel_entry);
+
+fn kernel_entry(_boot_info: &'static BootInfo) -> ! {
     // entry point
     println!("Hello world!");
 

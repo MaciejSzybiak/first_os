@@ -29,7 +29,6 @@ name = "first_os"
 version = "0.1.0"
 dependencies = [
  "bootloader",
- "cpuio",
  "lazy_static",
  "linked_list_allocator",
  "pc-keyboard",

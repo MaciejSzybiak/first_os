@@ -1,6 +1,5 @@
-extern crate cpuio;
-
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
+use x86_64::instructions::port::Port;
 use crate::{println, print};
 use lazy_static::lazy_static;
 use crate::gdt;
@@ -8,13 +7,13 @@ use pic8259_simple::ChainedPics;
 use spin;
 
 struct PicInServiceRegister {
-    port: cpuio::UnsafePort<u8>,
+    port: Port<u8>,
 }
 
 impl PicInServiceRegister {
     pub const unsafe fn new() -> PicInServiceRegister {
         PicInServiceRegister {
-            port: cpuio::UnsafePort::new(0x20),
+            port: Port::new(0x20),
         }
     }
 
@@ -113,7 +112,6 @@ extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: &mut InterruptSt
 }
 
 extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: &mut InterruptStackFrame) {
-    use x86_64::instructions::port::Port;
     use spin::Mutex;
     use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
 

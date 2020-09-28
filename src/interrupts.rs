@@ -1,9 +1,30 @@
+extern crate cpuio;
+
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 use crate::{println, print};
 use lazy_static::lazy_static;
 use crate::gdt;
 use pic8259_simple::ChainedPics;
 use spin;
+
+struct PicInServiceRegister {
+    port: cpuio::UnsafePort<u8>,
+}
+
+impl PicInServiceRegister {
+    pub const unsafe fn new() -> PicInServiceRegister {
+        PicInServiceRegister {
+            port: cpuio::UnsafePort::new(0x20),
+        }
+    }
+
+    pub fn read(&mut self) -> u8 {
+        unsafe { 
+            self.port.write(0x0b);
+            self.port.read()
+        }
+    }
+}
 
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {
@@ -15,6 +36,19 @@ lazy_static! {
         }
         idt[InterruptIndex::Timer.as_usize()].set_handler_fn(timer_interrupt_handler);
         idt[InterruptIndex::Keyboard.as_usize()].set_handler_fn(keyboard_interrupt_handler);
+        idt[InterruptIndex::Com2.as_usize()].set_handler_fn(default_interrupt_handler);
+        idt[InterruptIndex::Com1.as_usize()].set_handler_fn(default_interrupt_handler);
+        idt[InterruptIndex::Lpt2.as_usize()].set_handler_fn(default_interrupt_handler);
+        idt[InterruptIndex::Floppy.as_usize()].set_handler_fn(default_interrupt_handler);
+        idt[InterruptIndex::Lpt1.as_usize()].set_handler_fn(lpt1_interrupt_handler);
+        idt[InterruptIndex::Clock.as_usize()].set_handler_fn(default_interrupt_handler);
+        idt[InterruptIndex::Peripherial1.as_usize()].set_handler_fn(default_interrupt_handler);
+        idt[InterruptIndex::Peripherial2.as_usize()].set_handler_fn(default_interrupt_handler);
+        idt[InterruptIndex::Peripherial3.as_usize()].set_handler_fn(default_interrupt_handler);
+        idt[InterruptIndex::Mouse.as_usize()].set_handler_fn(default_interrupt_handler);
+        idt[InterruptIndex::Fpu.as_usize()].set_handler_fn(default_interrupt_handler);
+        idt[InterruptIndex::PrimaryAta.as_usize()].set_handler_fn(default_interrupt_handler);
+        idt[InterruptIndex::SecondaryAta.as_usize()].set_handler_fn(default_interrupt_handler);
         idt
     };
 }
@@ -25,11 +59,28 @@ pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
 pub static PICS: spin::Mutex<ChainedPics> =
     spin::Mutex::new(unsafe { ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET) });
 
+static PIC_REGISTER: spin::Mutex<PicInServiceRegister> =
+    spin::Mutex::new(unsafe { PicInServiceRegister::new() });
+
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
 pub enum InterruptIndex {
     Timer = PIC_1_OFFSET,
     Keyboard,
+    Cascade,
+    Com2,
+    Com1,
+    Lpt2,
+    Floppy,
+    Lpt1,
+    Clock,
+    Peripherial1,
+    Peripherial2,
+    Peripherial3,
+    Mouse,
+    Fpu,
+    PrimaryAta,
+    SecondaryAta,
 }
 
 impl InterruptIndex {
@@ -86,6 +137,24 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: &mut Interrup
 
     unsafe {
         PICS.lock().notify_end_of_interrupt(InterruptIndex::Keyboard.as_u8());
+    }
+}
+
+extern "x86-interrupt" fn lpt1_interrupt_handler(stack_frame: &mut InterruptStackFrame) {
+    let irr = PIC_REGISTER.lock().read();
+    if irr & 0x80 != 0 { // ignore spurious interrupts
+        println!("LPT1 interrupt:\n{:#?}", stack_frame);
+        unsafe{
+            PICS.lock().notify_end_of_interrupt(InterruptIndex::Lpt1.as_u8());
+        }
+    }
+}
+
+extern "x86-interrupt" fn default_interrupt_handler(_stack_frame: &mut InterruptStackFrame) {
+    let irr = PIC_REGISTER.lock().read();
+    println!("Interrupt detected (ID: {})", irr - 1);
+    unsafe{
+        PICS.lock().notify_end_of_interrupt(PIC_1_OFFSET + irr - 1);
     }
 }
 

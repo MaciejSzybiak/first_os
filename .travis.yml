@@ -1,5 +1,6 @@
 language: rust
 rust:
+  - nightly-2020-09-27
   - nightly
 before_install:
   - sudo apt-get update

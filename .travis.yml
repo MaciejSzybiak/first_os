@@ -9,5 +9,5 @@ before_script:
   - rustup component add llvm-tools-preview
   - cargo install bootimage
 script:
-  - cargo build --verbose
+  - cargo bootimage --verbose
   - cargo test --verbose

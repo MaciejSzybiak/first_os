@@ -12,3 +12,7 @@ before_script:
 script:
   - cargo bootimage --verbose
   - cargo test --verbose
+jobs:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true

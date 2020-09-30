@@ -1,18 +1,13 @@
 language: rust
-
 cache: cargo
-
 rust:
   - nightly
-
 before_install:
   - sudo apt-get update
   - sudo apt-get -y install qemu
-
 before_script:
   - rustup component add llvm-tools-preview
   - cargo install bootimage
-
 script:
   - cargo build --verbose
   - cargo test --verbose
